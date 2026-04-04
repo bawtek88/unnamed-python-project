@@ -129,7 +129,7 @@ class Game:
             console_open = bool(self.debug_console and self.debug_console.visible)
             if not console_open:
                 keys_pressed = pygame.key.get_pressed()
-                self.player.controller.input(keys_pressed)
+                self.player.controller.input(keys_pressed, time_delta)
 
             self.all_sprites.update()
             self.ui_manager.update(time_delta)

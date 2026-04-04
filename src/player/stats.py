@@ -15,6 +15,11 @@ class PlayerStats:
         
         self.basic_inventory_capacity = 40
         
+        # Stamina rates (points per second)
+        self.stamina_depletion_rate = 100
+        self.stamina_regen_rate = 50
+        self.stamina_accumulator = 0  
+        
         
         
     
