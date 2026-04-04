@@ -60,8 +60,8 @@ class Game:
             def cmd_clear(args, ctx):
                 self.debug_console.clear()
 
-            def cmd_fps(args, ctx):
-                ctx.log(f"FPS_LIMIT: {ctx.get_fps():.2f}")
+            def cmd_fps_limit(args, ctx):
+                ctx.log(f"FPS_LIMIT: {ctx.get_fps():.0f}")
             
             def cmd_screensize(args, ctx):
                 width, height = self.screen.get_size()
@@ -77,7 +77,7 @@ class Game:
 
             registry.register("help", cmd_help)
             registry.register("clear", cmd_clear)
-            registry.register("fps", cmd_fps)
+            registry.register("fpslimit", cmd_fps_limit)
             registry.register("screensize", cmd_screensize)
             registry.register("playerstats", cmd_stats)
 
@@ -118,6 +118,8 @@ class Game:
                     continue
 
                 if self.debug_console and self.debug_console.visible:
+                    if self.debug_console.process_history_event(event):
+                        continue
                     self.debug_console.process_event(event)
                 
                 self.ui_manager.process_events(event)                

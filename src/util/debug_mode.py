@@ -68,6 +68,9 @@ class DebugConsole:
         self._lines = deque(maxlen=max_lines)
         self.visible = start_visible
         self._last_fps = 0.0
+        self._history: list[str] = []
+        self._history_index: int | None = None
+        self._history_draft = ""
 
         width, height = screen_size
         panel_rect = pygame.Rect(
@@ -138,6 +141,12 @@ class DebugConsole:
             raw = event.text.strip()
             if raw:
                 self.push_line("> " + raw)
+                
+                if not self._history or self._history[-1] != raw:
+                    self._history.append(raw)
+                self._history_index = None
+                self._history_draft = ""
+                
                 ctx = DebugCommandContext(get_fps=lambda: self._last_fps, log=self.push_line)
                 self._registry.run(raw, ctx)
             self.input_line.set_text("")
@@ -153,6 +162,46 @@ class DebugConsole:
     def _refresh_output(self) -> None:
         self.output_box.set_text("<br>".join(self._lines))
     
+    def process_history_event(self, event: pygame.event.Event) -> bool:
+        if event.type != pygame.KEYDOWN:
+            return False
+        if not self.visible:
+            return False
+
+        if event.key == pygame.K_UP:
+            self._history_up()
+            return True
+        if event.key == pygame.K_DOWN:
+            self._history_down()
+            return True
+        return False
+
+    def _history_up(self) -> None:
+        if not self._history:
+            return
+
+        if self._history_index is None:
+            self._history_draft = self.input_line.get_text()
+            self._history_index = len(self._history) - 1
+        elif self._history_index > 0:
+            self._history_index -= 1
+
+        self.input_line.set_text(self._history[self._history_index])
+        self.input_line.focus()
+
+    def _history_down(self) -> None:
+        if self._history_index is None:
+            return
+
+        if self._history_index < len(self._history) - 1:
+            self._history_index += 1
+            self.input_line.set_text(self._history[self._history_index])
+        else:
+            self._history_index = None
+            self.input_line.set_text(self._history_draft)
+
+        self.input_line.focus()
+
     # Clear console output
     def clear(self) -> None:
         self._lines.clear()
