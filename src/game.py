@@ -1,13 +1,18 @@
 import pygame
+import pygame_gui
 import settings
 from player.entity import Player
 
 class Game:
     def __init__(self): #TODO : add debug mode
         pygame.init()
-        self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
+        if settings.MONITOR_SIZE_OVERRIDE:
+            display_size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+        else:
+            display_size = (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
+        self.screen = pygame.display.set_mode(display_size)
         pygame.display.set_caption("Project Hadron")
-        
+        self.ui_manager = pygame_gui.UIManager(self.screen.get_size())
         self.clock = pygame.time.Clock()
         self.running = True
         
@@ -20,6 +25,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.running = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+                    pygame.display.toggle_fullscreen()
+                
 
             keys_pressed = pygame.key.get_pressed()
             self.player.controller.input(keys_pressed)
