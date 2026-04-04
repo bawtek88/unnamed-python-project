@@ -9,6 +9,7 @@ import util.debug_mode as debug_mode
 class Game:
     def __init__(self):
         pygame.init()
+        
         if settings.MONITOR_SIZE_OVERRIDE:
             display_size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
         else:
@@ -19,6 +20,12 @@ class Game:
         
         self.clock = pygame.time.Clock()
         self.running = True
+        
+        self._fps_font = pygame.font.Font(None, 28)
+        self._fps_refresh_interval = 0.5
+        self._fps_refresh_accumulator = 0.0
+        self._fps_surface = self._fps_font.render("FPS: 0", True, (255, 255, 255))
+        self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
         
         self.all_sprites = pygame.sprite.Group()
         self.player = Player(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2)
@@ -54,7 +61,7 @@ class Game:
                 self.debug_console.clear()
 
             def cmd_fps(args, ctx):
-                ctx.log(f"FPS: {ctx.get_fps():.2f}")
+                ctx.log(f"FPS_LIMIT: {ctx.get_fps():.2f}")
 
             registry.register("help", cmd_help)
             registry.register("clear", cmd_clear)
@@ -65,8 +72,16 @@ class Game:
 
     def run(self):
         while self.running:
-            time_delta = self.clock.tick(settings.FPS) / 1000.0
+            time_delta = self.clock.tick(settings.FPS_LIMIT) / 1000.0
             current_fps = self.clock.get_fps()
+            
+            if settings.SHOW_FPS:
+                self._fps_refresh_accumulator += time_delta
+                if self._fps_refresh_accumulator >= self._fps_refresh_interval:
+                    self._fps_refresh_accumulator = 0.0
+                    fps_int = int(current_fps)
+                    self._fps_surface = self._fps_font.render(f"FPS: {fps_int}", True, (255, 255, 255))
+                    self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -107,8 +122,11 @@ class Game:
 
             self.screen.fill((0, 0, 0))
             self.all_sprites.draw(self.screen)
+            
+            if settings.SHOW_FPS:
+                self.screen.blit(self._fps_surface, self._fps_rect)
+            
             self.ui_manager.draw_ui(self.screen)
-            pygame.display.flip()  
-            self.clock.tick(settings.FPS)
+            pygame.display.flip()
 
         pygame.quit()

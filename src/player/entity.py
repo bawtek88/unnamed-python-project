@@ -21,13 +21,13 @@ class Player(Sprite):
         self.inventory = Inventory(self.stats.basic_inventory_capacity)
 
     def move_up(self):
-        self.rect.y -= self.stats.speed * (1 / settings.FPS)  # Assuming 60 FPS
+        self.rect.y -= self.stats.speed * (1 / settings.FPS_LIMIT)  # Assuming 60 FPS_LIMIT
 
     def move_down(self):
-        self.rect.y += self.stats.speed * (1 / settings.FPS)
+        self.rect.y += self.stats.speed * (1 / settings.FPS_LIMIT)
 
     def move_left(self):
-        self.rect.x -= self.stats.speed * (1 / settings.FPS)
+        self.rect.x -= self.stats.speed * (1 / settings.FPS_LIMIT)
 
     def move_right(self):
-        self.rect.x += self.stats.speed * (1 / settings.FPS)
+        self.rect.x += self.stats.speed * (1 / settings.FPS_LIMIT)
