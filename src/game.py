@@ -24,7 +24,7 @@ class Game:
         self._fps_font = pygame.font.Font(None, 28)
         self._fps_refresh_interval = 0.5
         self._fps_refresh_accumulator = 0.0
-        self._fps_surface = self._fps_font.render("FPS: 0", True, (255, 255, 255))
+        self._fps_surface = self._fps_font.render("FPS:", True, (255, 255, 255))
         self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
         
         self.all_sprites = pygame.sprite.Group()
@@ -62,10 +62,24 @@ class Game:
 
             def cmd_fps(args, ctx):
                 ctx.log(f"FPS_LIMIT: {ctx.get_fps():.2f}")
+            
+            def cmd_screensize(args, ctx):
+                width, height = self.screen.get_size()
+                ctx.log(f"Screen size: {width}x{height}")
+                
+            def cmd_stats(args, ctx):
+                stats = self.player.stats
+                ctx.log(f"Health: {stats.current_hp}/{stats.max_hp}")
+                ctx.log(f"Stamina: {stats.current_stamina}/{stats.max_stamina}")
+                ctx.log(f"Shield: {stats.current_shield}/{stats.max_shield}")
+                ctx.log(f"Speed: {stats.speed}")
+            
 
             registry.register("help", cmd_help)
             registry.register("clear", cmd_clear)
             registry.register("fps", cmd_fps)
+            registry.register("screensize", cmd_screensize)
+            registry.register("playerstats", cmd_stats)
 
             self.debug_console.attach_logger(self.logger)
             self.debug_console.push_line("Debug console ready. Type \"help\" for available commands.")
