@@ -1,30 +1,28 @@
 from .stats import PlayerStats
 from .controller import PlayerController
+from .inventory import Inventory
 
-import settings
 import pygame
+import settings
+from pygame import Surface
+from pygame.sprite import Sprite
 
 
-class Player(pygame.sprite.Sprite):
+class Player(Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((50, 50))
+        self.image = Surface((50, 50))
         self.image.fill((255, 255, 255))
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+        self.position = pygame.Vector2(self.rect.topleft)
         
         self.stats = PlayerStats()
         self.controller = PlayerController(self)
+        self.inventory = Inventory(self.stats.basic_inventory_capacity)
 
-    def move_up(self):
-        self.rect.y -= self.stats.speed * (1 / settings.FPS)  # Assuming 60 FPS
-
-    def move_down(self):
-        self.rect.y += self.stats.speed * (1 / settings.FPS)
-
-    def move_left(self):
-        self.rect.x -= self.stats.speed * (1 / settings.FPS)
-
-    def move_right(self):
-        self.rect.x += self.stats.speed * (1 / settings.FPS)
+    def move(self, direction, time_delta):
+        self.position.x += direction.x * self.stats.speed * time_delta
+        self.position.y += direction.y * self.stats.speed * time_delta
+        self.rect.topleft = (round(self.position.x), round(self.position.y))
