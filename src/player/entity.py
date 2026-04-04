@@ -22,19 +22,7 @@ class Player(Sprite):
         self.controller = PlayerController(self)
         self.inventory = Inventory(self.stats.basic_inventory_capacity)
 
-    def _move(self, x_direction, y_direction, time_delta):
-        self.position.x += x_direction * self.stats.speed * time_delta
-        self.position.y += y_direction * self.stats.speed * time_delta
+    def move(self, direction, time_delta):
+        self.position.x += direction.x * self.stats.speed * time_delta
+        self.position.y += direction.y * self.stats.speed * time_delta
         self.rect.topleft = (round(self.position.x), round(self.position.y))
-
-    def move_up(self, time_delta):
-        self._move(0, -1, time_delta)
-
-    def move_down(self, time_delta):
-        self._move(0, 1, time_delta)
-
-    def move_left(self, time_delta):
-        self._move(-1, 0, time_delta)
-
-    def move_right(self, time_delta):
-        self._move(1, 0, time_delta)

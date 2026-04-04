@@ -11,14 +11,20 @@ class PlayerController:
         self.player = player
 
     def input(self, keys_pressed, time_delta):
+        move_direction = pygame.Vector2(0, 0)
         if keys_pressed[pygame.K_w]:
-            self.player.move_up(time_delta)
+            move_direction.y -= 1
         if keys_pressed[pygame.K_s]:
-            self.player.move_down(time_delta)
+            move_direction.y += 1
         if keys_pressed[pygame.K_a]:
-            self.player.move_left(time_delta)
+            move_direction.x -= 1
         if keys_pressed[pygame.K_d]:
-            self.player.move_right(time_delta)
+            move_direction.x += 1
+            
+        if move_direction.length() > 0:
+            move_direction = move_direction.normalize()
+            
+        self.player.move(move_direction, time_delta)
         
         sprinting = keys_pressed[pygame.K_LSHIFT] and self.player.stats.current_stamina > 0
         if sprinting:
