@@ -10,7 +10,7 @@ class PlayerStats:
         self.armor = 0
         
         self.score = 0
-        self.default_speed = 200
+        self.default_speed = 400
         self.speed = self.default_speed
         
         self.basic_inventory_capacity = 40

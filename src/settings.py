@@ -8,6 +8,8 @@ DEBUG_CONSOLE_MARGIN = 16
 # Game settings
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-MONITOR_SIZE_OVERRIDE = True  # Causes pygame to use monitor's native resolution instead
-FPS_LIMIT = 60
+MONITOR_SIZE_OVERRIDE = True  # Causes pygame to use monitor's native resolution 
+FIXED_CAMERA = True
+FPS_LIMIT = 120
 SHOW_FPS = True
+SHOW_POS = True
