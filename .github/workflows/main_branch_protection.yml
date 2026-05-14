@@ -1,0 +1,17 @@
+name: enforce-indev-only-to-main
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allow only indev into main
+        run: |
+          if [ "${{ github.head_ref }}" != "indev" ]; then
+            echo "Only indev can be merged into main."
+            exit 1
+          fi
