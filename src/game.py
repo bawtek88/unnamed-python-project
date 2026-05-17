@@ -7,7 +7,8 @@ from player.entity import Player
 from player.camera import Camera
 import util.debug_mode as debug_mode
 
-from util.utils import ImageLoader
+from util.utils import ImageLoader, LevelLoader, WorldObject
+
 
 class Game:
     def __init__(self):
@@ -29,26 +30,52 @@ class Game:
         self._fps_font = pygame.font.Font(None, 28)
         self._fps_refresh_interval = 0.5
         self._fps_refresh_accumulator = 0.0
+
+        self._pos_refresh_interval = 0.05
+        self._pos_refresh_accumulator = 0.0
+
         self._fps_surface = self._fps_font.render("FPS:", True, (255, 255, 255))
         self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
 
         self._pos_font = pygame.font.Font(None, 28)
         self._pos_surface = self._pos_font.render("POS: ", True, (255, 255, 255))
         self._pos_rect = self._pos_surface.get_rect(topright=(self.screen.get_width() - 40, 12))
+
+        self._stam_surface = self._pos_font.render("POS: ", True, (255, 255, 255))
+        self._stam_rect = self._stam_surface.get_rect(topright=(self.screen.get_width() - 68, 12))
+        
         if settings.FIXED_CAMERA:
             self.camera = Camera(self.display_size[0], self.display_size[1])
         self.image_loader = ImageLoader()
 
         self.image_loader.load_image("background", "no_texture.png")
-        self.background = self.image_loader.get_image("background")
+        self.level_loader = LevelLoader(self.image_loader)
+        self.level = self.level_loader.load_level("level_test") #list of levels in util/levels
+        self.level_size = self.level["size"]
+    
+        self.background = self.image_loader.get_image(self.level["background"])
         self.background_surface = self.build_tiled_background()
 
         self.image_loader.load_image("player", "player.png")
         self.player_image = self.image_loader.get_image("player")
 
-        self.all_sprites = pygame.sprite.Group()
-        self.player = Player(self.display_size[0] // 2, self.display_size[1] // 2, self.player_image)
-        self.all_sprites.add(self.player)
+        self.world_sprites = pygame.sprite.Group()
+        self.level_sprites = pygame.sprite.Group()
+        self.entity_sprites = pygame.sprite.Group()
+        self.solid_objects = []
+
+        spawn_x, spawn_y = self.level["spawn"]
+        #self.player = Player(self.display_size[0] // 2, self.display_size[1] // 2, self.player_image) #old version for spawning in the middle
+        self.player = Player(spawn_x, spawn_y, self.player_image)
+        self.entity_sprites.add(self.player) 
+
+        #adding all objects from level
+        for object_data in self.level["objects"]:
+            image = self.image_loader.get_image(object_data["sprite"])
+            world_object = WorldObject(object_data["position"], image, object_data)
+            self.world_sprites.add(world_object)
+            if world_object.collision_rect is not None:
+                self.solid_objects.append(world_object)
 
         self.logger = logging.getLogger("hadron")
         self.logger.setLevel(logging.INFO)
@@ -103,14 +130,15 @@ class Game:
             self.debug_console.attach_logger(self.logger)
             self.debug_console.push_line("Debug console ready. Type \"help\" for available commands.")
 
-    def build_tiled_background(self): #very, very basic tiling implementation, and it only "builds" the background for the resolution of the screen
+    def build_tiled_background(self): #very, very basic tiling implementation, builds background for the specified size of the level
         tile_width = self.background.get_width()
         tile_height = self.background.get_height()
 
-        background_surface = pygame.Surface(self.display_size)
+        level_width, level_height = self.level["size"]
+        background_surface = pygame.Surface((level_width, level_height)).convert()
 
-        for x in range(0, self.display_size[0], tile_width):
-            for y in range(0, self.display_size[1], tile_height):
+        for x in range(0, level_width, tile_width):
+            for y in range(0, level_height, tile_height):
                 background_surface.blit(self.background, (x, y))
         return background_surface
 
@@ -120,22 +148,32 @@ class Game:
             current_fps = self.clock.get_fps()
 
             #TODO generalize font, and introduce dynamic position, i.e. if some block is not rendered, stack them to the top
-            if (settings.SHOW_FPS or settings.SHOW_POS):
+            #TODO could additionally show the position of cursor, and color the pixel with some multiplication
+            if settings.SHOW_FPS:
                 self._fps_refresh_accumulator += time_delta
+
                 if self._fps_refresh_accumulator >= self._fps_refresh_interval:
-                    
-
-                    if settings.SHOW_FPS:
-                        fps_int = int(current_fps)
-                        self._fps_surface = self._fps_font.render(f"FPS: {fps_int}", True, (255, 255, 255))
-                        self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
-
-                    if settings.SHOW_POS:
-                        xpos, ypos = self.player.get_pos()
-                        xpos_int, ypos_int = int(xpos), int(ypos)
-                        self._pos_surface = self._pos_font.render(f"X: {xpos_int} Y: {ypos_int}", True, (255, 255, 255))
-                        self._pos_rect = self._pos_surface.get_rect(topright=(self.screen.get_width() - 12, 40))
+                    fps_int = int(current_fps)
+                    self._fps_surface = self._fps_font.render(f"FPS: {fps_int}", True, (255, 255, 255))
+                    self._fps_rect = self._fps_surface.get_rect(topright=(self.screen.get_width() - 12, 12))
                     self._fps_refresh_accumulator = 0.0
+
+            if settings.SHOW_POS:
+                self._pos_refresh_accumulator += time_delta
+                if self._pos_refresh_accumulator >= self._pos_refresh_interval:
+
+                    xpos, ypos = self.player.get_pos()
+                    xpos_int, ypos_int = int(xpos), int(ypos)
+
+                    self._pos_surface = self._pos_font.render(f"X: {xpos_int} Y: {ypos_int}", True, (255, 255, 255))
+                    self._pos_rect = self._pos_surface.get_rect(topright=(self.screen.get_width() - 12, 40))
+                    
+                    #for now just quick stamina on scren
+                    stamina = self.player.get_stamina()
+                    self._stam_surface = self._pos_font.render(f"STAM: {stamina}", True, (255, 255, 255))
+                    self._stam_rect = self._stam_surface.get_rect(topright=(self.screen.get_width() - 12, 68))
+
+                    self._pos_refresh_accumulator = 0.0
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -171,11 +209,13 @@ class Game:
             console_open = bool(self.debug_console and self.debug_console.visible)
             if not console_open:
                 keys_pressed = pygame.key.get_pressed()
-                self.player.controller.input(keys_pressed, time_delta)
+                self.player.controller.input(keys_pressed, time_delta, self.solid_objects)
 
             self.screen.fill((0, 0, 0))
 
-            self.all_sprites.update()
+            self.level_sprites.update()
+            self.world_sprites.update()
+            self.entity_sprites.update()
             self.ui_manager.update(time_delta)
 
             if settings.FIXED_CAMERA:
@@ -183,18 +223,31 @@ class Game:
                 background_pos = (-int(self.camera.offset.x), -int(self.camera.offset.y))
                 self.screen.blit(self.background_surface, background_pos)
 
-                for sprite in self.all_sprites:
+                for sprite in self.level_sprites:
+                    draw_pos = self.camera.apply_rect(sprite.rect)
+                    self.screen.blit(sprite.image, draw_pos)
+
+                for sprite in self.world_sprites:
+                    draw_pos = self.camera.apply_rect(sprite.rect)
+                    self.screen.blit(sprite.image, draw_pos)
+
+                for sprite in self.entity_sprites:
                     draw_pos = self.camera.apply_rect(sprite.rect)
                     self.screen.blit(sprite.image, draw_pos)
             else:
                 self.screen.blit(self.background_surface, (0,0))
-                for sprite in self.all_sprites:
+                for sprite in self.level_sprites:
+                    self.screen.blit(sprite.image, sprite.rect)
+                for sprite in self.world_sprites:
+                    self.screen.blit(sprite.image, sprite.rect)
+                for sprite in self.entity_sprites:
                     self.screen.blit(sprite.image, sprite.rect)
 
             if settings.SHOW_FPS:
                 self.screen.blit(self._fps_surface, self._fps_rect)
             if settings.SHOW_POS:
                 self.screen.blit(self._pos_surface, self._pos_rect)
+                self.screen.blit(self._stam_surface, self._stam_rect)
             self.ui_manager.draw_ui(self.screen)
             pygame.display.flip()
 

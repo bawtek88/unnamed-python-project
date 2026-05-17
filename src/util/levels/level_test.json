@@ -1,0 +1,23 @@
+{
+    "background": "background2.png",
+    "size": [10000, 10000],
+    "spawn": [1000,1000],
+    "objects": [
+        {
+            "type": "test_cell_1x1",
+            "position": [0,0]
+        },
+        {
+            "type": "test_cell_1x1",
+            "position": [512,512]
+        },
+        {
+            "type": "test_cell_3x1",
+            "position": [128,0]
+        },
+        {
+            "type": "test_cell_1x3",
+            "position": [0,128]
+        }
+    ]
+}
