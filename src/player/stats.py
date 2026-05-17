@@ -10,7 +10,7 @@ class PlayerStats:
         self.armor = 0
         
         self.score = 0
-        self.default_speed = 400
+        self.default_speed = 1000
         self.speed = self.default_speed
         
         self.basic_inventory_capacity = 40
@@ -19,6 +19,9 @@ class PlayerStats:
         self.stamina_depletion_rate = 100
         self.stamina_regen_rate = 50
         self.stamina_accumulator = 0  
+
+    def get_stamina(self):
+        return self.current_stamina
         
         
         

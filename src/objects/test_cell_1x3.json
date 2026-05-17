@@ -1,0 +1,10 @@
+{
+    "name": "test_cell_1x3",
+    "sprite": "test_cell_1x3.png",
+    "hasCollision": true,
+    "collision": {
+        "type": "rect",
+        "offset": [0, 0],
+        "size": [128, 384]
+    }
+}
